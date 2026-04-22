@@ -1,19 +1,33 @@
 from shmem4py import shmem
+import NumPy as np
 
 my_rank = shmem.my_pe()
 commsz = shmem.n_pes()
 
+# PART 1: GET A SINGLE ITEM
+
 # all PEs must have 
 nextpe = (my_rank + 1) % commsz
-target = my_rank
 
-print(f'Before grabbing data: target at rank {my_rank} = {target}')
+# our symmetric memory is stored using np arrays, as these are mutable
+src = shmem.empty(1, dtype='i')
+src[0] = my_rank
+
+dst = np.empty(1, dtype='i')
+dst[0] = -1
+
+print(f'Before grabbing data: target at rank {my_rank} = {src[0]}')
 
 shmem.barrier_all()
-# each PE will get the rank of the next PE and put that into the 'target' variable locally
-shmem.get(target, my_rank, nextpe)
 
-print(f'After grabbing data: target at rank {my_rank} = {target}')
+# each PE will get the rank of the next PE and put that into the 'target' variable locally
+shmem.get(dst, src, nextpe)
+
+print(f'After grabbing data: target at rank {my_rank} = {src[0]}')
+
+# src[0] is the target, and it changes after the get operation is executed by each PE
+
+# PART 2: BROADCASTING AN ARRAY
 
 # allocates a new NumPy array of 0s in the *symmetric memory*
 # size of array = commsz
@@ -36,7 +50,7 @@ shmem.barrier_all()
 # all PEs get PE0's version of source_arr broadcasted to the local dest_arr
 shmem.broadcast(dest_arr, source_arr, 0)
 
-print(f'{myrank}: {dest_arr}')
+print(f'{my_rank}: {dest_arr}')
 
 # because this is a wrapper for C-based SHMEM, still need to free the memory allocated
 shmem.free(source_arr)

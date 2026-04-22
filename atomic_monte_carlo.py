@@ -13,8 +13,8 @@ def approxpi(num):
     count = 0
 
     for i in range(num):
-        x = random()
-        y = random()
+        x = random.random()
+        y = random.random()
         f_x = circle(x)
         if math.pow(y, 2) <= f_x:
             count += 1
