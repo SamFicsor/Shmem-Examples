@@ -1,5 +1,5 @@
 from shmem4py import shmem
-import NumPy as np
+import numpy as np
 
 my_rank = shmem.my_pe()
 commsz = shmem.n_pes()
